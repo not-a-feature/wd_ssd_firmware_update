@@ -1,14 +1,17 @@
 #!/bin/bash
 
 # This script downloads and updates the firmware of Western Digital SSDs on Ubuntu / Linux Mint.
-# It is only capable of updating to the latest version, if, and only if the current firmware version
-# is directly supported. If not you have to upgrade to one of these versions first.
+# It is only capable of updating, if, and only if the current firmware version is
+# directly supported. If not, you have to upgrade to one of these versions first.
+
 # The script assumes the SSD is at /dev/nvme0. Adjust accordingly if your SSD is located elsewhere.
-# Firmware updates can be risky. Always back up your data and understand the risks before proceeding.
+# Firmware updates can be risky.
+# Always back up your data and understand the risks before proceeding.
 # Use at your own risk
 
 # Copyright (C) 2023 by Jules Kreuer - @not_a_feature
 # With adaptations from @Klaas-
+
 
 # This piece of software is published unter the GNU General Public License v3.0
 # TLDR:
@@ -21,6 +24,21 @@
 # | ✓ Patent use     | State changes                |             |
 # | ✓ Private use    |                              |             |
 
+# Location of the nvme drive.
+nvme_location="/dev/nvme0"
+
+# Step 0: Check the requirements
+if ! required_nvme="$(type -p "nvme")" || [[ -z $required_nvme ]]; then
+  echo "The required package 'nvme-cli' is not installed."
+  echo "Please install it using 'sudo apt install nvme-cli'."
+  exit 1
+fi
+
+if ! required_awk="$(type -p "awk")" || [[ -z $required_awk ]]; then
+  echo "The required package 'mawk' is not installed."
+  echo "Please install it using 'sudo apt install mawk'."
+  exit 1
+fi
 
 # Step 1: Get model number and firmware version
 model=$(< /sys/class/nvme/nvme0/model xargs)
@@ -46,20 +64,21 @@ elif [[ "$device_properties_relative_url" == *"$NL"* ]]; then
     # check if latest version of the multiple firmware versions is already installed
     latest=$(echo "$device_properties_relative_url" | tail -n1 | awk -F'/' '{print $4}')
     if [[ "$firmware_rev" == "$latest" ]]; then
-        echo "already on latest"
+        echo "Already on latest firmware."
 	exit 0
     fi
     if [ -z "$1" ]; then
-    echo "multiple firmware versions available from wd, you need to select which firmware you want to upgrade to"
-    echo "possible values:"
+    echo "Multiple firmware versions available from WD. Please select which firmware you want to upgrade to."
+    echo "Possible values:"
     echo "$device_properties_relative_url" | awk -F'/' '{print $4}'
-    echo "usage $0 version-string"
+    echo "Usage $0 version-string"
     exit 1
     else
-        echo "using version $1"
+        echo "Using version $1"
     fi
     device_properties_relative_url=$(echo "$device_properties_relative_url" | grep "$1")
 fi
+
 # Do another check if there is only one firmware version to see if we have latest already installed
 latest=$(echo "$device_properties_relative_url" | awk -F'/' '{print $4}')
 if [[ "$firmware_rev" == "$latest" ]]; then
@@ -93,8 +112,8 @@ curl -O "$firmware_url"
 echo
 
 # Step 5: Update the firmware
-nvme fw-download -f "$fwfile" /dev/nvme0
+nvme fw-download -f "$fwfile" $nvme_location
 echo "Firmware download complete. Switching to new firmware..."
-nvme fw-commit -s 2 -a 3 /dev/nvme0
+nvme fw-commit -s 2 -a 3 $nvme_location
 
 echo "Firmware update process completed. Please reboot."
