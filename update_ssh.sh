@@ -8,6 +8,8 @@
 # Use at your own risk
 
 # Copyright (C) 2023 by Jules Kreuer - @not_a_feature
+# With adaptations from @Klaas-
+
 # This piece of software is published unter the GNU General Public License v3.0
 # TLDR:
 #
@@ -21,8 +23,8 @@
 
 
 # Step 1: Get model number and firmware version
-model=$(cat /sys/class/nvme/nvme0/model | xargs)
-firmware_rev=$(cat /sys/class/nvme/nvme0/firmware_rev | xargs)
+model=$(< /sys/class/nvme/nvme0/model xargs)
+firmware_rev=$(< /sys/class/nvme/nvme0/firmware_rev xargs)
 
 echo "Model: $model"
 echo "Firmware Revision: $firmware_rev"
@@ -33,27 +35,52 @@ model_under=${model// /_}
 
 # Step 2: Fetch the device list and find the firmware URL
 device_list_url="https://wddashboarddownloads.wdc.com/wdDashboard/config/devices/lista_devices.xml"
-device_properties_relative_url=$(curl -s $device_list_url | grep $model_under | grep -oP "(?<=<url>).*?(?=</url>)") #
+device_properties_relative_url=$(curl -s "$device_list_url" | grep "$model_under" | grep -oP "(?<=<url>).*?(?=</url>)") #
+
+NL=$'\n'  # newline character
 
 if [ -z "$device_properties_relative_url" ]; then
     echo "No matching firmware URL found for model $model."
     exit 1
+elif [[ "$device_properties_relative_url" == *"$NL"* ]]; then
+    # check if latest version of the multiple firmware versions is already installed
+    latest=$(echo "$device_properties_relative_url" | tail -n1 | awk -F'/' '{print $4}')
+    if [[ "$firmware_rev" == "$latest" ]]; then
+        echo "already on latest"
+	exit 0
+    fi
+    if [ -z "$1" ]; then
+    echo "multiple firmware versions available from wd, you need to select which firmware you want to upgrade to"
+    echo "possible values:"
+    echo "$device_properties_relative_url" | awk -F'/' '{print $4}'
+    echo "usage $0 version-string"
+    exit 1
+    else
+        echo "using version $1"
+    fi
+    device_properties_relative_url=$(echo "$device_properties_relative_url" | grep "$1")
+fi
+# Do another check if there is only one firmware version to see if we have latest already installed
+latest=$(echo "$device_properties_relative_url" | awk -F'/' '{print $4}')
+if [[ "$firmware_rev" == "$latest" ]]; then
+    echo "already on latest"
+    exit 0
 fi
 
 full_device_properties_url="https://wddashboarddownloads.wdc.com/$device_properties_relative_url"
 
 # Step 3: Download the device properties XML and parse it
-device_properties_xml=$(curl -s $full_device_properties_url)
+device_properties_xml=$(curl -s "$full_device_properties_url")
 fwfile=$(echo "$device_properties_xml" | grep -oP "(?<=<fwfile>).*?(?=</fwfile>)")
 dependencies=$(echo "$device_properties_xml" | grep -oP "(?<=<dependency model=\"$model\">).*?(?=</dependency>)")
 
 echo "Firmware File: $fwfile"
 echo "Dependencies:"
-echo $dependencies
+echo "$dependencies"
 echo
 
 # Check if current firmware is in dependencies
-if [[ ! "$dependencies" =~ "$firmware_rev" ]]; then
+if [[ ! "$dependencies" =~ $firmware_rev ]]; then
     echo "Current firmware version is not in the dependencies. Please upgrade to one of these versions first: $dependencies"
     exit 1
 fi
@@ -61,12 +88,12 @@ fi
 # Step 4: Download the firmware file
 firmware_url=${full_device_properties_url/device_properties.xml/$fwfile}
 echo "Downloading firmware from $firmware_url..."
-curl -O $firmware_url
+curl -O "$firmware_url"
 
 echo
 
 # Step 5: Update the firmware
-nvme fw-download -f $fwfile /dev/nvme0
+nvme fw-download -f "$fwfile" /dev/nvme0
 echo "Firmware download complete. Switching to new firmware..."
 nvme fw-commit -s 2 -a 3 /dev/nvme0
 
