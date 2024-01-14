@@ -34,6 +34,12 @@ if ! required_nvme="$(type -p "nvme")" || [[ -z $required_nvme ]]; then
   exit 1
 fi
 
+if ! required_curl="$(type -p "curl")" || [[ -z $required_curl ]]; then
+  echo "The required package 'curl' is not installed."
+  echo "Please install it using 'sudo apt install curl'."
+  exit 1
+fi
+
 if ! required_awk="$(type -p "awk")" || [[ -z $required_awk ]]; then
   echo "The required package 'mawk' is not installed."
   echo "Please install it using 'sudo apt install mawk'."
