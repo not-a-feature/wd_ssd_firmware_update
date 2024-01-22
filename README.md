@@ -18,9 +18,10 @@ See the discussion on: https://community.frame.work/t/western-digital-drive-upda
 
 ## Requirements
 
+- `curl`: Required for accessing / downloading the firmware.
 - `nvme-cli`: Required for interacting with NVMe devices.
 - `mawk`: Required for processing text data.
-
+ 
 ## Contributors
 
 | Contributor        | GitHub Handle   | Contributions   |
