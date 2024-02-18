@@ -14,7 +14,7 @@ See the discussion on: https://community.frame.work/t/western-digital-drive-upda
 
 0. Download `wd_ssd_fw_update.sh` from this repo.
 1. Ensure the SSD is located at `/dev/nvme0` or modify the script accordingly.
-3. Run the script: `sudo ./update_ssh.sh`.
+2. Run the script: `sudo ./wd_ssd_fw_update.sh`.
 
 ## Requirements
 
