@@ -28,6 +28,12 @@
 nvme_location="/dev/nvme0"
 
 # Step 0: Check the requirements
+if [[ "$EUID" -ne 0 ]]; then
+  echo "This script must be run as root."
+  echo "Re-run the script as 'sudo $0'."
+  exit 1
+fi
+
 if ! required_nvme="$(type -p "nvme")" || [[ -z $required_nvme ]]; then
   echo "The required package 'nvme-cli' is not installed."
   echo "Please install it using 'sudo apt install nvme-cli'."
