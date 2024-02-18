@@ -47,8 +47,8 @@ if ! required_awk="$(type -p "awk")" || [[ -z $required_awk ]]; then
 fi
 
 # Step 1: Get model number and firmware version
-model=$(< /sys/class/nvme/nvme0/model xargs)
-firmware_rev=$(< /sys/class/nvme/nvme0/firmware_rev xargs)
+model=$(nvme id-ctrl $nvme_location | grep -E "mn\s*:" | cut -d':' -f2 | xargs)
+firmware_rev=$(nvme id-ctrl $nvme_location | grep -E "fr\s*:" | cut -d':' -f2 | xargs)
 
 echo "Model: $model"
 echo "Firmware Revision: $firmware_rev"
