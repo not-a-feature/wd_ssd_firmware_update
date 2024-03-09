@@ -3,7 +3,10 @@
 This script updates Western Digital (WD) SSD firmware on Ubuntu and Linux Mint systems. 
 It was initially developed for frame.work 13 laptops, but can be used for other devices aswell.
 
-See the discussion on: https://community.frame.work/t/western-digital-drive-update-guide-without-windows-wd-dashboard/20616
+### ⚠️ News: Use the interactive tool wd-fw-update.
+- Install it via pip: `pip install wd-fw-update`
+- Then run `wd-fw-update`
+- See https://github.com/not-a-feature/wd_fw_update for more information.
 
 **Important Notes:**
 - This script only updates if the current firmware version is directly supported.
