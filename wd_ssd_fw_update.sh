@@ -25,7 +25,8 @@
 # | ✓ Private use    |                              |             |
 
 # Location of the nvme drive.
-nvme_location="/dev/nvme0"
+# Reads the first argument, if it's empty, defaults to /dev/nvme0
+nvme_location="${1:-/dev/nvme0}"
 
 # Step 0: Check the requirements
 if [[ "$EUID" -ne 0 ]]; then
