@@ -16,8 +16,10 @@ It was initially developed for frame.work 13 laptops, but can be used for other 
 ## Usage
 
 0. Download `wd_ssd_fw_update.sh` from this repo.
-1. Ensure the SSD is located at `/dev/nvme0` or modify the script accordingly.
-2. Run the script: `sudo ./wd_ssd_fw_update.sh`.
+1. Find the SSD with `sudo nvme list`.
+2. Run the script with the SSD device: `sudo ./wd_ssd_fw_update.sh /dev/nvme0`. The device defaults to `/dev/nvme0`.
+3. If WD lists more than one firmware version, run the script again with the version: `sudo ./wd_ssd_fw_update.sh /dev/nvme0 <version>`.
+4. Confirm the update when the script asks.
 
 ## Requirements
 
